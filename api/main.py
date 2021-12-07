@@ -1,4 +1,4 @@
-import flask, requests, json
+import flask
 from flask.templating import render_template
 from flask.globals import request
 import flowbird
