@@ -1,5 +1,5 @@
 import requests
-import time
+import time,re
 def get_cookie():
     url = "https://betalap.flowbirdapp.com/customer/get"
 
@@ -18,7 +18,7 @@ def get_cookie():
         #headers['PHPSESSID'] = response.cookies.get_dict()["PHPSESSID"]
         return headers
     except:
-        print(response.status_code, response.text)
+        print('Error in get_cookie',response.status_code, response.text)
 
 def get_user_session(user,password,headers):
 
@@ -38,7 +38,7 @@ def get_user_session(user,password,headers):
         headers['cookie'] += f'; user={user_token}'
         return headers
     except:
-        print(response.status_code, response.text)
+        print('Error in get_user_session',response.status_code, response.text)
 
 def create_order(order_dict,headers):
     url = "https://betalap.flowbirdapp.com/order/create"
@@ -67,23 +67,49 @@ def create_order(order_dict,headers):
             "longitude": order_dict['long']
         }
     }
-    response = requests.request("GET", url, json=payload, headers=headers, params=querystring)
+    response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
+    assert response.status_code == 200, print('Error in create_order',response.status_code, response.text)
+
+    confirm_url = response.json()['response']['customer']   
     try:
-        confirm_url = response.json()['response']['customer'] #URL to see order
-        return confirm_url
+        customer_id= re.match('.*customer\/v[0-9]\/(.*)\/', confirm_url).group(1)
+    except TypeError:
+        print('Error in create_order. Could not find customer_id from the response url', confirm_url)
+        return None, None
+    order_id = response.json()['response']['order_1']['id']
+    #TODO: validation here
+    return customer_id, order_id
+        
+
+def get_payment(customer_id,headers):
+    url = 'https://betalap.flowbirdapp.com/payment-account/get?'
+    querystring = {"customerId":customer_id,"rt":time.time(),"version":"2.8.0 1103"}
+
+    response = requests.request("POST", url, headers=headers, params=querystring)
+
+    assert response.status_code == 200, print('Error in get_payment', response.status_code, response.text)
+
+    return
+
+
+def confirm_order(order_id,headers):
+    url = 'https://betalap.flowbirdapp.com/order/confirm'
+    querystring = {"id":order_id,"rt":time.time(),"version":"2.8.0 1103", 'platform': 'europe'}
+    response = requests.request("POST",url, params=querystring, headers=headers)
+    try:
+        status = response.json()['response']['order_1']['status']
+        return status
     except:
-        print(response.status_code, response.text)
-    
+        print('Error in confirm_order',response.status_code, response.text)
+        return None
+
 def login(username,password):
     headers = get_cookie()
     headers = get_user_session(username, password, headers)
     return headers
 
-def buy(username,start_time,headers):
-    
-    lat = 59.3307
-    long = 18.0718
-    order_dict = {'username':username,'lat': lat, 'long': long, 'start_time': start_time, 'duration': 'P1DT11H49M29S', 'vehicle': {
+def buy(username,start_time, duration, lat, long,headers):
+    order_dict = {'username':username,'lat': lat, 'long': long, 'start_time': start_time, 'duration': duration, 'vehicle': {
                 "id": 884376,
                 "plate": "GFD578",
                 "default": True,
@@ -91,13 +117,16 @@ def buy(username,start_time,headers):
                 "country-plate": "SE",
                 "isExternalTicketNotification": False
             }}
-    order_url = create_order(order_dict,headers)
-    return order_url
+    customer_id, order_id = create_order(order_dict,headers)
+    get_payment(customer_id, headers)
+    response = confirm_order(order_id, headers)
+    return response
 
-def login_and_buy(username,password,start_time):
+def login_and_buy(username,password,start_time, duration, lat, long):
     headers = login(username,password)
-    order_url = buy(username,start_time,headers)
-    return order_url, headers
+    status = buy(username,start_time, duration, lat, long,headers)
+    
+    return status
 
 if __name__ == '__main__':
     pass
