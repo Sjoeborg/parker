@@ -97,7 +97,7 @@ def buy(username,start_time,headers):
 def login_and_buy(username,password,start_time):
     headers = login(username,password)
     order_url = buy(username,start_time,headers)
-    return order_url
+    return order_url, headers
 
 if __name__ == '__main__':
     pass
