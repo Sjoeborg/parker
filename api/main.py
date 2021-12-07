@@ -1,7 +1,6 @@
 import flask
 from flask.templating import render_template
 from flask.globals import request
-import requests
 import time
 app = flask.Flask(__name__)
 
