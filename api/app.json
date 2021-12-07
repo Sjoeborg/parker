@@ -1,0 +1,10 @@
+{
+  "name": "Stockholm Parker",
+  "description": "TDB",
+  "image": "heroku/python",
+  "repository": "https://github.com/Sjoeborg/parker",
+  "keywords": ["python"],
+  "addons": [ "heroku-postgresql" ],
+  "environments": {
+  }
+}
