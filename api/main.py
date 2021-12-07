@@ -1,7 +1,7 @@
 import flask
 from flask.templating import render_template
 from flask.globals import request
-import time
+import time, requests
 app = flask.Flask(__name__)
 
 
@@ -114,4 +114,5 @@ def login_and_buy(username,password,start_time):
     order_url = buy(username,start_time,headers)
     return order_url
 
-app.run()
+if __name__ == '__main__':
+    app.run(debug=True)
