@@ -99,7 +99,6 @@ def buy(lat,long,end_date,license_plate,user_id,parking_id,token):
         "pointerLatitude": lat,
         "pointerLongitude": long
     }
-    print(payload)
     headers = {
         "x-authorization": f"Bearer {token}",
         "easypark-application-channel-name": "Android",
@@ -119,20 +118,28 @@ def buy(lat,long,end_date,license_plate,user_id,parking_id,token):
     querystring = {"isAutomotive":"false"}
 
     response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
-    assert response.status_code == 200, print('Error in buy()')
+    assert response.status_code == 200 or response.status_code == 201, print('Error in buy()', response.status_code, response.text)
 
-    if response.json()['active'] == 'true':
+    if response.json()['active'] is True:
         status = 'confirmed'
     else:
         status = 'failed'
+    return status
+
+def login_and_buy(username,password, lat,lon, duration=None):
+    token,user_id,car = login(username,password)
+    search_result = search_lat_long(lat,lon,token)
+    zoneName, zoneNo = search_result[0] #TODO: better picker
+    if duration is None:
+        duration = int((time.time()+600)*1e3)
+    else:
+        duration += int((time.time())*1e3)
+    status = buy(lat,lon, duration, car,user_id, zoneNo, token) #TODO: handle time
     return status
 
 if __name__ == '__main__':
     from dotenv import load_dotenv
     import os
     load_dotenv()
-    token,user_id,car = login(os.getenv('EASYPARK_USERNAME'), os.getenv('EASYPARK_PASSWORD'))
-    search_result = search_lat_long(59.3320717137231,18.0606129347121,token)
-    zoneName, zoneNo = search_result[1] #TODO: better picker
-    buy(59.3320717137231,18.0606129347121, int((time.time()+600)*1e3), car,user_id, zoneNo, token) #TODO: handle time
+    login_and_buy(os.getenv('EASYPARK_USERNAME'), os.getenv('EASYPARK_PASSWORD'), 59.3307, 18.0718)
     #get_price(int((time.time()+200)*1e3), car,user_id,zoneNo,token)

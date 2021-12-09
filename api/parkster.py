@@ -206,7 +206,8 @@ def buy_from_location(email, password, lat,long, license_plate=None):
     zone_name, zone_adress, zone_id = search_results[0] #TODO: logic to pick the best zone
     print(f'Found zone {zone_name} at {zone_adress}')
     feezone_id = get_fee_id(zone_id, token)
-    buy(zone_id, feezone_id,car_id, token, user_id)
+    status = buy(zone_id, feezone_id,car_id, token, user_id)
+    return status
 
 def buy_from_search(email, password, query, license_plate=None):
     '''
@@ -229,7 +230,8 @@ def buy_from_search(email, password, query, license_plate=None):
     zone_name, zone_adress, zone_id = search_results[0]
     feezone_id = get_fee_id(zone_id, token)
     print('Buying ticket at', zone_name, zone_adress)
-    buy(zone_id,feezone_id, car_id, token, user_id)
+    status = buy(zone_id,feezone_id, car_id, token, user_id)
+    return status
 
 
 if __name__ == '__main__':
