@@ -6,12 +6,12 @@ from api.parkster import buy_from_location as parkster_buy
 from marshmallow import Schema, fields, ValidationError
 
 class UserSchema(Schema):
-    username = fields.Email(required=True, error_messages={"required": {"message": "Username required in the form of an email adress.", "code": 400}})
-    password = fields.String(required=True, error_messages={"required": {"message": "Password required", "code": 400}})
+    username = fields.Email(required=True, error_messages={"required": {"message": "Username required in the form of an email adress."}})
+    password = fields.String(required=True, error_messages={"required": {"message": "Password required"}})
     start_time = fields.String(required=False)
     duration = fields.String(required=False)
-    lat = fields.String(required=True, error_messages={"required": {"message": "Lat required", "code": 400}})
-    lon = fields.String(required=True, error_messages={"required": {"message": "Lon required", "code": 400}})
+    lat = fields.String(required=True, error_messages={"required": {"message": "Lat required"}})
+    lon = fields.String(required=True, error_messages={"required": {"message": "Lon required"}})
 
 
 @flaskapp.route("/flowbird", methods=["POST"])
@@ -24,11 +24,11 @@ def flowbird():
     try:
         status = flowbird_buy(order_dict['username'], order_dict['password'],order_dict['lat'], order_dict['lon'],order_dict['start_time'], order_dict['duration'])
     except AssertionError as e:
-        return 'Error: ' + str(e), 500
+        return 'Error: ' + str(e), 400
     if status == 'confirmed':
         return f'Flowbird ticket at {order_dict["lat"], order_dict["lon"]} confirmed.', 200
     else:
-        return f'Failed. Status is {status}', 500
+        return f'Failed. Status is {status}', 400
 
 @flaskapp.route("/easypark", methods=["POST"])
 def easypark():
@@ -40,11 +40,11 @@ def easypark():
     try:
         status = easypark_buy(order_dict['username'], order_dict['password'],order_dict['lat'], order_dict['lon'])
     except AssertionError as e:
-        return 'Error: ' + str(e), 500
+        return 'Error: ' + str(e), 400
     if status == 'confirmed':
         return f'Easypark ticket at {order_dict["lat"], order_dict["lon"]} confirmed.', 200
     else:
-        return f'Failed. Status is {status}', 500
+        return f'Failed. Status is {status}', 400
 
 @flaskapp.route("/parkster", methods=["POST"])
 def parkster():
@@ -56,8 +56,8 @@ def parkster():
     try:
         status = parkster_buy(order_dict['username'], order_dict['password'],order_dict['lat'], order_dict['lon'])
     except AssertionError as e:
-        return 'Error: ' + str(e), 500
+        return 'Error: ' + str(e), 400
     if status == 'confirmed':
         return f'Parkster ticket at {order_dict["lat"], order_dict["lon"]} confirmed.', 200
     else:
-        return f'Failed. Status is {status}', 500
+        return f'Failed. Status is {status}', 400
