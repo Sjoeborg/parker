@@ -6,7 +6,7 @@ from api.parkster import buy_from_location as parkster_buy
 from marshmallow import Schema, fields, ValidationError
 
 class UserSchema(Schema):
-    username = fields.Email(required=True, error_messages={"required": {"message": "Username required in the form of an email adress."}})
+    username = fields.String(required=True, error_messages={"required": {"message": "Username required"}})
     password = fields.String(required=True, error_messages={"required": {"message": "Password required"}})
     start_time = fields.String(required=False)
     duration = fields.String(required=False)
