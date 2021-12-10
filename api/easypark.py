@@ -1,3 +1,4 @@
+from os import error
 import requests,time
 
 def get_price(end_date,license_plate,user_id,parking_id,token):
@@ -7,7 +8,6 @@ def get_price(end_date,license_plate,user_id,parking_id,token):
     url = "https://app-bff.easyparksystem.net/android/api/parking/price"
 
     querystring = {"includePriceInUserCurrency":"false"}
-
     payload = {'carCountryCode':'SE',
                'carLicenseNumber':license_plate,
                'endDate':end_date,
@@ -33,8 +33,11 @@ def get_price(end_date,license_plate,user_id,parking_id,token):
     }
 
     response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
-
-    print((response.json()['priceInclVat'], response.json()['currency']))
+    print(response.json())
+    try:
+        return response.json()['priceInclVat'], response.json()['currency']
+    except KeyError:
+        return None, None
 
 def login(username, password):
     '''
@@ -49,9 +52,13 @@ def login(username, password):
     headers = {"Content-Type": "application/json"}
 
     response = requests.request("POST", url, json=payload, headers=headers)
-    token = response.json()['sso']['idToken']
-    user_id = response.json()['status']['accounts'][0]['parkingUser']['id']
-    car = response.json()['status']['cars'][0]['licenseNumber'] # TODO: smarter car picker. (no need to pick car here though)
+    try:
+        token = response.json()['sso']['idToken']
+        user_id = response.json()['status']['accounts'][0]['parkingUser']['id']
+        car = response.json()['status']['cars'][0]['licenseNumber'] # TODO: smarter car picker. (no need to pick car here though)
+    except KeyError:
+        print(response.json())
+        return None, None, None
     return token, user_id, car
 
 def search_lat_long(lat,lon,token):
@@ -59,7 +66,6 @@ def search_lat_long(lat,lon,token):
     Returns a list of parking areas near the given coordinates. The list contain tuples `(name, id)`
     '''
     url = "https://app-bff.easyparksystem.net/android/api/location/inrectangle/V2"
-
     querystring = {"lat1":lat - 5e-4,"lon1":lon -5e-4,"lat2":lat + 5e-4,"lon2":lon + 5e-4}
 
     headers = {
@@ -122,6 +128,7 @@ def buy(lat,long,end_date,license_plate,user_id,parking_id,token):
 
     if response.json()['active'] is True:
         status = 'confirmed'
+        #print(f'Bought parking spot for {license_plate}')
     else:
         status = 'failed'
     return status
@@ -137,6 +144,18 @@ def login_and_buy(username,password, lat,lon, duration=None):
     status = buy(lat,lon, duration, car,user_id, zoneNo, token) #TODO: handle time
     return status
 
+def get_price(username, password, lat, lon, end_date):
+        try:
+            token,user_id,car = login(username,password)
+        except IndexError as e:
+            return 'Error:' + e , 401
+        try:
+            search_result = search_lat_long(float(lat),float(lon),token)
+            zoneName, zoneNo = search_result[0]
+            amount, currency = get_price(int(float(end_date)*1e3),car,user_id,zoneNo,token)
+        except error as e:
+            return 'Error when searching:'+ e , 400
+        return {'price': amount, 'currency': currency}, 200
 if __name__ == '__main__':
     from dotenv import load_dotenv
     import os
