@@ -178,7 +178,7 @@ def login(username,password):
 def buy(username,zone_name,zone_id,start_time, duration, lat, long,headers):
     order_dict = {'username':username,"zone_name": zone_name,"zone_id": zone_id,'lat': lat, 'long': long, 'start_time': start_time, 'duration': duration, 'vehicle': {
                 "id": 884376,
-                "plate": "GFD578",
+                "plate": "GFD578", #TODO: Get vehicle plate and id 
                 "default": True,
                 "category": "car",
                 "country-plate": "SE",
