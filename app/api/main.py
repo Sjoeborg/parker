@@ -8,6 +8,8 @@ from . import endpoints as api
 from .. import db, Photos
 from .integrations import easypark,flowbird, parkster
 from marshmallow import Schema, fields, ValidationError
+import tensorflow as tf
+loaded_model = tf.keras.models.load_model('C:/Users/Martin/parker/app/digits.h5')
 
 
 class UserSchema(Schema):
@@ -85,8 +87,11 @@ def price():
 @api.route("/photo", methods=["POST"])
 def receive_photo():
     code = 400
-    r = flask.request
-    submit_photo(r)
+    pickle_file = flask.request.data
+    img = pickle.loads(pickle_file)
+    img = preprocess(img)
+    pred = submit_photo(img)
+    '''
     id = nanoid.generate()
     new_photo = Photos(
         id=id,
@@ -96,6 +101,9 @@ def receive_photo():
     db.session.commit()
     code = 200
     return id, code
+    '''
+    code = 200
+    return pred, code
 
 @api.route("/result", methods=["GET"])
 def get_prediction():
@@ -121,5 +129,12 @@ def get_photo():
     else:
         return 'No photo with that id', 400
 
+def preprocess(img):
+    img = img.astype("float32") / 255.0
+    img = img.reshape(1, 28, 28, 1)
+    return img
+
 def submit_photo(img):
-    return 1
+    predictions_one_hot = loaded_model.predict(img)
+    predictions = np.argmax(predictions_one_hot, axis=1)
+    return str(predictions[0])

@@ -1,1 +1,1 @@
-web: python run.py runserver 0.0.0.0:5000
+web: C:\"Program Files"\Python\python.exe run.py
