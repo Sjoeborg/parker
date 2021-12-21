@@ -16,6 +16,6 @@ def create_app():
     db.init_app(flaskapp)
     with flaskapp.app_context():
         db.create_all()
-    from .api import endpoints
+    from .apie import endpoints
     flaskapp.register_blueprint(endpoints)
     return flaskapp
