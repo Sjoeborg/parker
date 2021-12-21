@@ -66,7 +66,7 @@ def search_lat_long(lat,lon,token):
     Returns a list of parking areas near the given coordinates. The list contain tuples `(name, id)`
     '''
     url = "https://app-bff.easyparksystem.net/android/api/location/inrectangle/V2"
-    querystring = {"lat1":lat - 5e-4,"lon1":lon -5e-4,"lat2":lat + 5e-4,"lon2":lon + 5e-4}
+    querystring = {"lat1":float(lat) - 5e-4,"lon1":float(lon) -5e-4,"lat2":float(lat) + 5e-4,"lon2":float(lon) + 5e-4}
 
     headers = {
         "x-authorization": f"Bearer {token}",
