@@ -2,3 +2,8 @@ flask
 gunicorn
 requests
 marshmallow
+psycopg2
+numpy
+opencv-python
+nanoid
+pickle

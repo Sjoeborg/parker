@@ -1,9 +1,14 @@
 import flask
 import cv2
 import numpy as np
-from api import flaskapp
-from api import flowbird, parkster, easypark
+import nanoid
+import pickle
+import datetime
+from . import endpoints as api
+from .. import db, Photos
+from .integrations import easypark,flowbird, parkster
 from marshmallow import Schema, fields, ValidationError
+
 
 class UserSchema(Schema):
     username = fields.String(required=True, error_messages={"required": {"message": "Username required"}})
@@ -20,7 +25,7 @@ class PriceSchema(Schema):
     lat = fields.String(required=True, error_messages={"required": {"message": "Lat required"}})
     lon = fields.String(required=True, error_messages={"required": {"message": "Lon required"}})
 
-@flaskapp.route("/flowbird", methods=["POST"])
+@api.route("/flowbird", methods=["POST"])
 def buy_flowbird():
     status = None
     try:
@@ -36,7 +41,7 @@ def buy_flowbird():
     else:
         return f'Failed. Status is {status}', 400
 
-@flaskapp.route("/easypark", methods=["POST"])
+@api.route("/easypark", methods=["POST"])
 def buy_easypark():
     status = None
     try:
@@ -52,7 +57,7 @@ def buy_easypark():
     else:
         return f'Failed. Status is {status}', 400
 
-@flaskapp.route("/parkster", methods=["POST"])
+@api.route("/parkster", methods=["POST"])
 def buy_parkster():
     status = None
     try:
@@ -68,7 +73,7 @@ def buy_parkster():
     else:
         return f'Failed. Status is {status}', 400
 
-@flaskapp.route("/price", methods=["GET"])
+@api.route("/price", methods=["GET"])
 def price():
     try:
         order_dict = PriceSchema().load(flask.request.form.to_dict())
@@ -77,19 +82,44 @@ def price():
     result, code = easypark.get_price(order_dict['username'], order_dict['password'], order_dict['lat'], order_dict['lon'], order_dict['end_date'])
     return result, code
     
-@flaskapp.route("/photo", methods=["POST"])
-def photo():
+@api.route("/photo", methods=["POST"])
+def receive_photo():
+    code = 400
     r = flask.request
-    # convert string of image data to uint8
-    nparr = np.fromstring(r.data, np.uint8)
-    # decode image
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    submit_photo(r)
+    id = nanoid.generate()
+    new_photo = Photos(
+        id=id,
+        data=r.data,
+        date=datetime.datetime.now())
+    db.session.add(new_photo)
+    db.session.commit()
+    code = 200
+    return id, code
 
-    # do some fancy processing here....
+@api.route("/result", methods=["GET"])
+def get_prediction():
+    id = flask.request.args.get('id')
+    photo = Photos.query.filter_by(id=id).first()
+    if photo:
+        if photo.prediction is not None:
+            return photo.prediction, 200
+        else:
+            return 'No prediction yet', 200
+    else:
+        return 'No photo with that id', 400
 
-    # build a response dict to send back to client
-    response = {'message': 'image received. size={}x{}'.format(img.shape[1], img.shape[0])
-                }
-    # encode response using jsonpickle
+@api.route("/photo", methods=["GET"])
+def get_photo():
+    id = flask.request.args.get('id')
+    photo = Photos.query.filter_by(id=id).first()
+    if photo:
+        try:
+            return photo.data, 200
+        except:
+            return 'No photo', 200
+    else:
+        return 'No photo with that id', 400
 
-    return flask.Response(response=response, status=200, mimetype="application/json")
+def submit_photo(img):
+    return 1
