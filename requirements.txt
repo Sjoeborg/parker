@@ -6,3 +6,4 @@ psycopg2
 numpy
 opencv-python
 nanoid
+tensorflow
