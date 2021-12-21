@@ -50,7 +50,6 @@ def login(username, password):
         "username": username
     }
     headers = {"Content-Type": "application/json"}
-
     response = requests.request("POST", url, json=payload, headers=headers)
     try:
         token = response.json()['sso']['idToken']
@@ -87,7 +86,8 @@ def search_lat_long(lat,lon,token):
     response = requests.request("GET", url, headers=headers, params=querystring)
     area_response = response.json()['areas']
     area_list = [(area['areaName'],area['areaNo']) for area in area_response if area['parkingOperatorStickerType'] == 'DIGITAL']
-        
+    if response.status_code != 200:
+        print(response.text)
     return area_list
 
 def buy(lat,long,end_date,license_plate,user_id,parking_id,token):
@@ -144,7 +144,7 @@ def login_and_buy(username,password, lat,lon, duration=None):
     status = buy(lat,lon, duration, car,user_id, zoneNo, token) #TODO: handle time
     return status
 
-def get_price(username, password, lat, lon, end_date):
+def search_and_get_price(username, password, lat, lon, end_date):
         try:
             token,user_id,car = login(username,password)
         except IndexError as e:
@@ -153,8 +153,8 @@ def get_price(username, password, lat, lon, end_date):
             search_result = search_lat_long(float(lat),float(lon),token)
             zoneName, zoneNo = search_result[0]
             amount, currency = get_price(int(float(end_date)*1e3),car,user_id,zoneNo,token)
-        except error as e:
-            return 'Error when searching:'+ e , 400
+        except IndexError as e:
+            return 'Error when searching' , 400
         return {'price': amount, 'currency': currency}, 200
 if __name__ == '__main__':
     from dotenv import load_dotenv

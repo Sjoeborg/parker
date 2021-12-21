@@ -79,7 +79,7 @@ def price():
         order_dict = PriceSchema().load(flask.request.form.to_dict())
     except ValidationError as err:
         return err.messages, 400
-    result, code = easypark.get_price(order_dict['username'], order_dict['password'], order_dict['lat'], order_dict['lon'], order_dict['end_date'])
+    result, code = easypark.search_and_get_price(order_dict['username'], order_dict['password'], order_dict['lat'], order_dict['lon'], order_dict['end_date'])
     return result, code
     
 @api.route("/photo", methods=["POST"])
