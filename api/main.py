@@ -1,4 +1,6 @@
 import flask
+import cv2
+import numpy as np
 from api import flaskapp
 from api import flowbird, parkster, easypark
 from marshmallow import Schema, fields, ValidationError
@@ -75,4 +77,19 @@ def price():
     result, code = easypark.get_price(order_dict['username'], order_dict['password'], order_dict['lat'], order_dict['lon'], order_dict['end_date'])
     return result, code
     
-    
+@flaskapp.route("/photo", methods=["POST"])
+def photo():
+    r = flask.request
+    # convert string of image data to uint8
+    nparr = np.fromstring(r.data, np.uint8)
+    # decode image
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # do some fancy processing here....
+
+    # build a response dict to send back to client
+    response = {'message': 'image received. size={}x{}'.format(img.shape[1], img.shape[0])
+                }
+    # encode response using jsonpickle
+
+    return flask.Response(response=response, status=200, mimetype="application/json")
