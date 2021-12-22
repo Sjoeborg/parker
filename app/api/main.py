@@ -8,8 +8,12 @@ from . import endpoints as api
 from .. import db, Photos
 from .integrations import easypark,flowbird, parkster
 from marshmallow import Schema, fields, ValidationError
-import tensorflow as tf
-loaded_model = tf.keras.models.load_model('C:/Users/Martin/parker/app/digits.h5')
+import tensorflow.lite as tf
+
+loaded_model = tf.Interpreter('C:/Users/Martin/parker/app/model.tflite')
+loaded_model.allocate_tensors()
+output = loaded_model.get_output_details()[0]  # Model has single output.
+input = loaded_model.get_input_details()[0]
 
 
 class UserSchema(Schema):
@@ -135,6 +139,7 @@ def preprocess(img):
     return img
 
 def submit_photo(img):
-    predictions_one_hot = loaded_model.predict(img)
-    predictions = np.argmax(predictions_one_hot, axis=1)
-    return str(predictions[0])
+    loaded_model.set_tensor(input['index'], img)
+    loaded_model.invoke()
+    predictions = np.argmax(loaded_model.get_tensor(output['index']))
+    return str(predictions)
