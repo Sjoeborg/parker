@@ -4,7 +4,7 @@ requests
 marshmallow
 psycopg2
 numpy
-opencv-python
+opencv-python-headless
 nanoid
 flask-sqlalchemy
 tensorflow-cpu
