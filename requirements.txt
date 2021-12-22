@@ -6,4 +6,5 @@ psycopg2
 numpy
 opencv-python
 nanoid
+flask-sqlalchemy
 tensorflow-cpu
