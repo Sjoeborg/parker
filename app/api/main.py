@@ -8,9 +8,9 @@ from . import endpoints as api
 from .. import db, Photos
 from .integrations import easypark,flowbird, parkster
 from marshmallow import Schema, fields, ValidationError
-import tensorflow.lite as tf
+import tflite_runtime.interpreter as tflite
 
-loaded_model = tf.Interpreter('C:/Users/Martin/parker/app/model.tflite')
+loaded_model = tflite.Interpreter('C:/Users/Martin/parker/app/model.tflite')
 loaded_model.allocate_tensors()
 output = loaded_model.get_output_details()[0]  # Model has single output.
 input = loaded_model.get_input_details()[0]
