@@ -2,6 +2,7 @@ import flask
 import cv2
 import numpy as np
 import nanoid
+import os
 import pickle
 import datetime
 from . import endpoints as api
@@ -10,7 +11,8 @@ from .integrations import easypark,flowbird, parkster
 from marshmallow import Schema, fields, ValidationError
 import tensorflow.lite as tflite
 
-loaded_model = tflite.Interpreter('C:/Users/Martin/parker/app/model.tflite')
+dir = os.path.dirname(__file__)
+loaded_model = tflite.Interpreter(os.path.join(dir, '../model.tflite'))
 loaded_model.allocate_tensors()
 output = loaded_model.get_output_details()[0]  # Model has single output.
 input = loaded_model.get_input_details()[0]
@@ -93,21 +95,20 @@ def receive_photo():
     code = 400
     pickle_file = flask.request.data
     img = pickle.loads(pickle_file)
+    #store_in_db(img)
     img = preprocess(img)
     pred = submit_photo(img)
-    '''
+    code = 200
+    return pred, code
+
+def store_in_db(data):
     id = nanoid.generate()
     new_photo = Photos(
         id=id,
-        data=r.data,
+        data=data,
         date=datetime.datetime.now())
     db.session.add(new_photo)
     db.session.commit()
-    code = 200
-    return id, code
-    '''
-    code = 200
-    return pred, code
 
 @api.route("/result", methods=["GET"])
 def get_prediction():
